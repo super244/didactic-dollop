@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 import random
 
 
@@ -68,6 +69,7 @@ def generate_calculus_problems(n=1000):
         build_series_example,
     ]
     problems = [random.choice(builders)() for _ in range(n)]
+    Path("data").mkdir(parents=True, exist_ok=True)
 
     with open("data/calculus_problems.jsonl", "w", encoding="utf-8") as handle:
         for problem in problems:

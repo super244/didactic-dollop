@@ -12,10 +12,12 @@ from transformers import (
 )
 
 
-MODEL_NAME = "Qwen/Qwen3-7B-Instruct"
+DEFAULT_BASE_MODEL = "Qwen/Qwen2.5-0.5B-Instruct"
+MODEL_NAME = os.environ.get("BASE_MODEL_NAME", DEFAULT_BASE_MODEL)
 DATASET_PATH = "data/calculus_problems.jsonl"
-OUTPUT_DIR = "qwen3-calculus-finetuned"
+OUTPUT_DIR = "qwen-calculus-finetuned"
 MAX_LENGTH = 512
+HF_TOKEN = os.environ.get("HF_TOKEN")
 
 
 def format_examples(problems, solutions):
@@ -30,7 +32,13 @@ def main():
         raise FileNotFoundError(f"Dataset not found: {DATASET_PATH}")
 
     dataset = load_dataset("json", data_files=DATASET_PATH, split="train")
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, token=HF_TOKEN)
+    except OSError as exc:
+        raise RuntimeError(
+            "Unable to load the base model. Set BASE_MODEL_NAME to a valid public model "
+            f"or authenticate with HF_TOKEN if the repo is private or gated. Current value: {MODEL_NAME}"
+        ) from exc
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
@@ -49,11 +57,18 @@ def main():
     )
 
     use_cuda = torch.cuda.is_available()
-    model = AutoModelForCausalLM.from_pretrained(
-        MODEL_NAME,
-        device_map="auto" if use_cuda else None,
-        torch_dtype=torch.float16 if use_cuda else torch.float32,
-    )
+    try:
+        model = AutoModelForCausalLM.from_pretrained(
+            MODEL_NAME,
+            token=HF_TOKEN,
+            device_map="auto" if use_cuda else None,
+            torch_dtype=torch.float16 if use_cuda else torch.float32,
+        )
+    except OSError as exc:
+        raise RuntimeError(
+            "Unable to download the base model weights. Verify BASE_MODEL_NAME, run `hf auth login`, "
+            "or export HF_TOKEN for gated/private repositories."
+        ) from exc
     model.config.pad_token_id = tokenizer.pad_token_id
     model = get_peft_model(
         model,

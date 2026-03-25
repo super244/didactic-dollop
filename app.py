@@ -5,8 +5,9 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
-DEFAULT_MODEL_PATH = "qwen3-calculus-finetuned"
-FALLBACK_MODEL_NAME = "Qwen/Qwen3-7B-Instruct"
+DEFAULT_MODEL_PATH = "qwen-calculus-finetuned"
+FALLBACK_MODEL_NAME = os.environ.get("BASE_MODEL_NAME", "Qwen/Qwen2.5-0.5B-Instruct")
+HF_TOKEN = os.environ.get("HF_TOKEN")
 
 
 def resolve_model_path():
@@ -19,14 +20,21 @@ def resolve_model_path():
 def load_model():
     model_path = resolve_model_path()
     use_cuda = torch.cuda.is_available()
-    tokenizer = AutoTokenizer.from_pretrained(model_path)
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
-    model = AutoModelForCausalLM.from_pretrained(
-        model_path,
-        device_map="auto" if use_cuda else None,
-        torch_dtype=torch.float16 if use_cuda else torch.float32,
-    )
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(model_path, token=HF_TOKEN)
+        if tokenizer.pad_token is None:
+            tokenizer.pad_token = tokenizer.eos_token
+        model = AutoModelForCausalLM.from_pretrained(
+            model_path,
+            token=HF_TOKEN,
+            device_map="auto" if use_cuda else None,
+            torch_dtype=torch.float16 if use_cuda else torch.float32,
+        )
+    except OSError as exc:
+        raise RuntimeError(
+            "Unable to load a model for the app. Train the repo first, or set BASE_MODEL_NAME "
+            "to a valid public model. Use HF_TOKEN or `hf auth login` for gated/private repos."
+        ) from exc
     return tokenizer, model
 
 
@@ -52,7 +60,7 @@ def main():
         fn=generate_response,
         inputs="text",
         outputs="text",
-        title="Calculus Tutor (Qwen3-7B-Instruct)",
+        title="Calculus Tutor",
         description="Ask calculus questions. Powered by a fine-tuned Qwen model when available.",
         examples=[
             "Find the derivative of sin(x)",

@@ -4,9 +4,10 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends git python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python -m pip install --no-cache-dir accelerate transformers peft datasets gradio
-
 WORKDIR /app
+COPY requirements.txt /app/requirements.txt
+RUN python -m pip install --no-cache-dir -r requirements.txt
+
 COPY . /app
 
 EXPOSE 7860
