@@ -1,16 +1,14 @@
 FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
 
-# Install dependencies
-RUN apt-get update && apt-get install -y git python3-pip
-RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-RUN pip install transformers peft datasets gradio
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git python3-pip \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy code
-COPY . /app
+RUN python -m pip install --no-cache-dir accelerate transformers peft datasets gradio
+
 WORKDIR /app
+COPY . /app
 
-# Expose port
 EXPOSE 7860
 
-# Start app
 CMD ["python", "app.py"]
