@@ -1,3 +1,4 @@
+import inspect
 import os
 
 import torch
@@ -25,6 +26,32 @@ def format_examples(problems, solutions):
         f"Problem: {problem}\nSolution: {solution}"
         for problem, solution in zip(problems, solutions)
     ]
+
+
+def build_training_args(use_cuda):
+    supported_args = inspect.signature(TrainingArguments.__init__).parameters
+    training_kwargs = {
+        "output_dir": OUTPUT_DIR,
+        "num_train_epochs": 3,
+        "per_device_train_batch_size": 4,
+        "gradient_accumulation_steps": 4,
+        "learning_rate": 2e-4,
+        "weight_decay": 0.01,
+        "logging_steps": 10,
+        "save_strategy": "epoch",
+        "warmup_ratio": 0.03,
+        "lr_scheduler_type": "cosine",
+        "fp16": use_cuda,
+        "report_to": "none",
+        "remove_unused_columns": False,
+    }
+
+    if "evaluation_strategy" in supported_args:
+        training_kwargs["evaluation_strategy"] = "no"
+    elif "eval_strategy" in supported_args:
+        training_kwargs["eval_strategy"] = "no"
+
+    return TrainingArguments(**training_kwargs)
 
 
 def main():
@@ -82,22 +109,7 @@ def main():
         ),
     )
 
-    training_args = TrainingArguments(
-        output_dir=OUTPUT_DIR,
-        num_train_epochs=3,
-        per_device_train_batch_size=4,
-        gradient_accumulation_steps=4,
-        learning_rate=2e-4,
-        weight_decay=0.01,
-        logging_steps=10,
-        save_strategy="epoch",
-        evaluation_strategy="no",
-        warmup_ratio=0.03,
-        lr_scheduler_type="cosine",
-        fp16=use_cuda,
-        report_to="none",
-        remove_unused_columns=False,
-    )
+    training_args = build_training_args(use_cuda)
 
     trainer = Trainer(
         model=model,
