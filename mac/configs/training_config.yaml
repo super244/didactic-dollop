@@ -1,0 +1,56 @@
+# macOS MLX Training Configuration
+# Optimized for Apple Silicon with unified memory
+
+hardware:
+  platform: "macos"
+  accelerator: "metal"
+  memory_gb: 64
+  unified_memory: true
+
+model:
+  base_model: "Qwen/Qwen2.5-0.5B-Instruct"
+  use_mlx: true
+  quantization: null  # MLX handles its own optimization
+
+training:
+  batch_size: 8
+  gradient_accumulation_steps: 2
+  learning_rate: 1e-4
+  num_epochs: 5
+  max_length: 512
+  lora_r: 16
+  lora_alpha: 32
+  lora_dropout: 0.1
+  warmup_ratio: 0.05
+  weight_decay: 0.01
+
+dataset:
+  size: 5000
+  split_ratio: 0.9
+  problem_distribution:
+    derivatives: 0.4
+    integrals: 0.3
+    limits: 0.2
+    series: 0.1
+    applications: 0.0
+  difficulty_progression:
+    basic: 0.7
+    intermediate: 0.25
+    advanced: 0.05
+
+output:
+  base_dir: "outputs/macos_mlx"
+  save_strategy: "epoch"
+  logging_steps: 20
+
+fine_tuning:
+  num_iterations: 3
+  learning_rate_decay: 0.5
+  epochs_per_iteration: 2
+
+evaluation:
+  benchmark_path: "data/evaluation_benchmark.json"
+  metrics:
+    - accuracy
+    - step_correctness
+    - explanation_quality

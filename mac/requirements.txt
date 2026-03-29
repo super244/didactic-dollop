@@ -1,0 +1,31 @@
+# macOS MLX Training Requirements
+# Install with: pip install -r requirements.txt
+
+# Core ML libraries
+mlx>=0.9.0
+mlx-ml>=0.0.1
+
+# Transformers and tokenizers
+transformers>=4.45.0
+tokenizers>=0.19.0
+
+# Data handling
+datasets>=2.19.0
+numpy>=1.24.0
+pandas>=2.1.0
+
+# Configuration
+pyyaml>=6.0
+
+# Web interface
+gradio>=4.44.0
+plotly>=5.17.0
+
+# Hugging Face
+huggingface_hub>=0.23.0
+safetensors>=0.4.3
+
+# Optional: For evaluation comparisons
+torch>=2.1.0
+peft>=0.11.1
+accelerate>=0.30.0

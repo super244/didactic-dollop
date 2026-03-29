@@ -1,0 +1,58 @@
+# H200 Training Configuration
+# Single GPU with 141GB VRAM
+
+hardware:
+  platform: "linux"
+  accelerator: "cuda"
+  gpu_memory_gb: 141
+  num_gpus: 1
+
+
+model:
+  base_model: "Qwen/Qwen2.5-7B-Instruct"
+  use_qlora: true
+  quantization: "4bit"
+
+training:
+  batch_size: 32
+  gradient_accumulation_steps: 2
+  learning_rate: 1e-4
+  num_epochs: 3
+  max_length: 2048
+  lora_r: 64
+  lora_alpha: 128
+  lora_dropout: 0.05
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+
+
+dataset:
+  size: 50000
+  split_ratio: 0.9
+  problem_distribution:
+    derivatives: 0.2
+    integrals: 0.2
+    limits: 0.2
+    series: 0.2
+    applications: 0.2
+  difficulty_progression:
+    basic: 0.3
+    intermediate: 0.4
+    advanced: 0.3
+
+output:
+  base_dir: "outputs/h200"
+  save_strategy: "epoch"
+  logging_steps: 100
+
+fine_tuning:
+  num_iterations: 3
+  learning_rate_decay: 0.5
+  epochs_per_iteration: 2
+
+evaluation:
+  benchmark_path: "data/evaluation_benchmark.json"
+  metrics:
+    - accuracy
+    - step_correctness
+    - explanation_quality

@@ -1,0 +1,58 @@
+# 4X B200 Training Configuration
+# Multi-GPU with 192GB VRAM
+
+hardware:
+  platform: "linux"
+  accelerator: "cuda"
+  gpu_memory_gb: 192
+  num_gpus: 4
+  multi_gpu: true
+
+model:
+  base_model: "Qwen/Qwen2.5-32B-Instruct"
+  use_qlora: true
+  quantization: "4bit"
+
+training:
+  batch_size: 8
+  gradient_accumulation_steps: 8
+  learning_rate: 5e-5
+  num_epochs: 2
+  max_length: 4096
+  lora_r: 128
+  lora_alpha: 256
+  lora_dropout: 0.05
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  deepspeed: true
+
+dataset:
+  size: 200000
+  split_ratio: 0.9
+  problem_distribution:
+    derivatives: 0.18
+    integrals: 0.18
+    limits: 0.18
+    series: 0.18
+    applications: 0.28
+  difficulty_progression:
+    basic: 0.2
+    intermediate: 0.4
+    advanced: 0.4
+
+output:
+  base_dir: "outputs/4x_b200"
+  save_strategy: "epoch"
+  logging_steps: 100
+
+fine_tuning:
+  num_iterations: 3
+  learning_rate_decay: 0.5
+  epochs_per_iteration: 2
+
+evaluation:
+  benchmark_path: "data/evaluation_benchmark.json"
+  metrics:
+    - accuracy
+    - step_correctness
+    - explanation_quality
